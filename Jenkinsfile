@@ -9,16 +9,20 @@ node {
 		        sh 'mvn compile'
 		        sh 'mvn clean install'
 	        }
-	   }
+	    }
+		stage('Sonarqube analysis') {
+	       	withSonarQubeEnv(credentialsId: 'sonarqube') {
+	     	   sh 'mvn sonar:sonar -Dsonar.host.url=http://35.238.144.183:9000'
+			}
+	   	}
 		stage('Build Docker Image'){
            sh 'docker build -t niraimani/devops-casestudy .'
-         }
-         
-         stage('Push to Docker Hub') {
-        	 withCredentials([usernamePassword(credentialsId: 'docker-hub', passwordVariable: 'doc_password', usernameVariable: 'doc_username')]) {
+        } 
+        stage('Push to Docker Hub') {
+        	withCredentials([usernamePassword(credentialsId: 'docker-hub', passwordVariable: 'doc_password', usernameVariable: 'doc_username')]) {
                 sh "docker login -u=${doc_username} -p=${doc_password}"
-             }
-        	 sh 'docker push niraimani/devops-casestudy'
+            }
+        	sh 'docker push niraimani/devops-casestudy'
         }
 	   	stage('Deploy tomcat') {
 	        sshagent(['tomcat-dev']) {
@@ -29,9 +33,9 @@ node {
 		   notifySuccessful()
 		}
 	} catch (e) {
-    currentBuild.result = "FAILED"
-    notifyFailed()
-    throw e
+	    currentBuild.result = "FAILED"
+	    notifyFailed()
+	    throw e
   }
 }
 def notifyStarted() {
