@@ -1,0 +1,16 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: casestudy-deployment
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: casestudy
+    spec:
+      containers:
+      - name: casestudy-container
+        image: niraimani/devops-casestudy:latest
+        ports:
+        - containerPort: 8080
