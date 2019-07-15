@@ -24,12 +24,18 @@ node {
             }
         	sh 'docker push niraimani/devops-casestudy'
         }
-	   	stage('Deploy tomcat') {
-	        sshagent(['tomcat-dev']) {
-	            sh 'scp -o StrictHostKeyChecking=no $WORKSPACE/project/target/project-1.0-RAMA.war root@35.188.92.142:/opt/tomcat/webapps'
-	        }
-	   	}
-	    stage('Email Notification') {
+	stage('Deploy'){
+          withCredentials([file(credentialsId: 'k8s-key', variable: 'K8SCredential')]){
+            sh """
+            gcloud auth activate-service-account --key-file=${K8SCredential}
+            gcloud config set compute/zone us-central1-a
+            gcloud config set project awesome-advice-243417
+            gcloud container clusters get-credentials casestudy
+            kubectl apply -f k8s/
+            """
+          }
+        }
+	stage('Email Notification') {
 		   notifySuccessful()
 		}
 	} catch (e) {
